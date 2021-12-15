@@ -1,0 +1,7 @@
+[run]
+source = payments
+omit = payments/tests/*,payments/admin.py
+branch = true
+
+[report]
+omit = payments/tests/*,payments/admin.py
