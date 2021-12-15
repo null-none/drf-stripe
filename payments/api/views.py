@@ -1,10 +1,8 @@
-from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.utils.encoding import smart_str
 
 from rest_framework import status, generics
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
@@ -30,7 +28,7 @@ import stripe
 stripe.api_key = app_settings.get_api_key()
 
 
-class StripeView(APIView):
+class StripeView(generics.GenericAPIView):
     """Generic API StripeView"""
 
     permission_classes = (IsAuthenticated,)
