@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.db.models.fields import FieldDoesNotExist
 
 from .models import (
     Charge,

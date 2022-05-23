@@ -54,7 +54,7 @@ class StripeObject(models.Model):
 
 
 class EventProcessingException(models.Model):
-    event = models.ForeignKey("Event", null=True)
+    event = models.ForeignKey("Event", null=True, on_delete=models.SET_NULL)
     data = models.TextField()
     message = models.CharField(max_length=500)
     traceback = models.TextField()
@@ -76,7 +76,7 @@ class EventProcessingException(models.Model):
 class Event(StripeObject):
     kind = models.CharField(max_length=250)
     livemode = models.BooleanField(default=False)
-    customer = models.ForeignKey("Customer", null=True)
+    customer = models.ForeignKey("Customer", null=True, on_delete=models.SET_NULL)
     webhook_message = JSONField()
     validated_message = JSONField(null=True)
     valid = models.NullBooleanField(null=True)
@@ -190,7 +190,9 @@ class Event(StripeObject):
 
 class Transfer(StripeObject):
     # pylint: disable=C0301
-    event = models.ForeignKey(Event, related_name="transfers")
+    event = models.ForeignKey(
+        Event, related_name="transfers", on_delete=models.DO_NOTHING
+    )
     amount = models.DecimalField(decimal_places=2, max_digits=9)
     currency = models.CharField(max_length=25, default="usd")
     status = models.CharField(max_length=25)
@@ -279,7 +281,9 @@ class Transfer(StripeObject):
 
 
 class TransferChargeFee(models.Model):
-    transfer = models.ForeignKey(Transfer, related_name="charge_fee_details")
+    transfer = models.ForeignKey(
+        Transfer, related_name="charge_fee_details", on_delete=models.DO_NOTHING
+    )
     amount = models.DecimalField(decimal_places=2, max_digits=9)
     currency = models.CharField(max_length=10, default="usd")
     application = models.TextField(null=True, blank=True)
@@ -290,7 +294,7 @@ class TransferChargeFee(models.Model):
 
 class Customer(StripeObject):
     user = models.OneToOneField(
-        getattr(settings, "AUTH_USER_MODEL", "auth.User"), null=True
+        getattr(settings, "AUTH_USER_MODEL", "auth.User"), null=True, on_delete=models.DO_NOTHING
     )
     card_fingerprint = models.CharField(max_length=200, blank=True)
     card_last_4 = models.CharField(max_length=4, blank=True)
@@ -591,7 +595,7 @@ class Customer(StripeObject):
 
 class CurrentSubscription(models.Model):
     customer = models.OneToOneField(
-        Customer, related_name="current_subscription", null=True
+        Customer, related_name="current_subscription", null=True, on_delete=models.SET_NULL
     )
     plan = models.CharField(max_length=100)
     quantity = models.IntegerField()
@@ -649,7 +653,9 @@ class CurrentSubscription(models.Model):
 
 class Invoice(models.Model):
     stripe_id = models.CharField(max_length=255)
-    customer = models.ForeignKey(Customer, related_name="invoices")
+    customer = models.ForeignKey(
+        Customer, related_name="invoices", on_delete=models.DO_NOTHING
+    )
     attempted = models.NullBooleanField()
     attempts = models.PositiveIntegerField(null=True)
     closed = models.BooleanField(default=False)
@@ -782,7 +788,9 @@ class Invoice(models.Model):
 class InvoiceItem(models.Model):
     stripe_id = models.CharField(max_length=255)
     created_at = models.DateTimeField(default=timezone.now)
-    invoice = models.ForeignKey(Invoice, related_name="items")
+    invoice = models.ForeignKey(
+        Invoice, related_name="items", on_delete=models.DO_NOTHING
+    )
     amount = models.DecimalField(decimal_places=2, max_digits=9)
     currency = models.CharField(max_length=10, default="usd")
     period_start = models.DateTimeField()
@@ -798,8 +806,12 @@ class InvoiceItem(models.Model):
 
 
 class Charge(StripeObject):
-    customer = models.ForeignKey(Customer, related_name="charges")
-    invoice = models.ForeignKey(Invoice, null=True, related_name="charges")
+    customer = models.ForeignKey(
+        Customer, related_name="charges", on_delete=models.DO_NOTHING
+    )
+    invoice = models.ForeignKey(
+        Invoice, null=True, related_name="charges", on_delete=models.SET_NULL
+    )
     card_last_4 = models.CharField(max_length=4, blank=True)
     card_kind = models.CharField(max_length=50, blank=True)
     currency = models.CharField(max_length=10, default="usd")

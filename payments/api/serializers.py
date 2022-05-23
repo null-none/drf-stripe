@@ -88,20 +88,20 @@ class SubscriptionSerializer(Serializer):
 
 class CardSerializer(Serializer):
     number = serializers.IntegerField(
-        help_text=u"The card number, as a string without any separators.", required=True
+        help_text="The card number, as a string without any separators.", required=True
     )
     exp_month = serializers.IntegerField(
-        help_text=u"Two digit number representing the card's expiration month.",
+        help_text="Two digit number representing the card's expiration month.",
         required=True,
     )
     exp_year = serializers.IntegerField(
-        help_text=u"Two or four digit number representing the card's expiration year.",
+        help_text="Two or four digit number representing the card's expiration year.",
         required=True,
     )
-    cvc = serializers.IntegerField(help_text=u"Card security code.", required=True)
+    cvc = serializers.IntegerField(help_text="Card security code.", required=True)
 
     name = serializers.CharField(
-        help_text=u"Cardholder's full name.", required=False, allow_null=True
+        help_text="Cardholder's full name.", required=False, allow_null=True
     )
     address_line1 = serializers.CharField(required=False, allow_null=True)
     address_line2 = serializers.CharField(required=False, allow_null=True)
@@ -116,7 +116,7 @@ class CancelSerializer(Serializer):
 
     def validate_confirm(self, value):
         if value is False:
-            raise serializers.ValidationError(u"Please confirm to continue.")
+            raise serializers.ValidationError("Please confirm to continue.")
         return value
 
 

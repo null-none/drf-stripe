@@ -81,7 +81,7 @@ class SubscriptionView(StripeView):
         except stripe.StripeError as e:
             from django.utils.encoding import smart_str
 
-            error_data = {u"error": smart_str(e) or u"Unknown error"}
+            error_data = {"error": smart_str(e) or "Unknown error"}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -112,7 +112,7 @@ class ChangeCardView(StripeView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except stripe.CardError as e:
-            error_data = {u"error": smart_str(e) or u"Unknown error"}
+            error_data = {"error": smart_str(e) or "Unknown error"}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -131,7 +131,7 @@ class CancelView(StripeView):
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except stripe.StripeError as e:
-            error_data = {u"error": smart_str(e) or u"Unknown error"}
+            error_data = {"error": smart_str(e) or "Unknown error"}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -233,11 +233,11 @@ class WebhookView(StripeView):
                         )
                 else:
                     error_data = {
-                        u"error": u"Webhook must contain id, type and livemode."
+                        "error": "Webhook must contain id, type and livemode."
                     }
                     return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except stripe.StripeError as e:
-            error_data = {u"error": smart_str(e) or u"Unknown error"}
+            error_data = {"error": smart_str(e) or "Unknown error"}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
