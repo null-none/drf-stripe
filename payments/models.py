@@ -294,7 +294,9 @@ class TransferChargeFee(models.Model):
 
 class Customer(StripeObject):
     user = models.OneToOneField(
-        getattr(settings, "AUTH_USER_MODEL", "auth.User"), null=True, on_delete=models.DO_NOTHING
+        getattr(settings, "AUTH_USER_MODEL", "auth.User"),
+        null=True,
+        on_delete=models.DO_NOTHING,
     )
     card_fingerprint = models.CharField(max_length=200, blank=True)
     card_last_4 = models.CharField(max_length=4, blank=True)
@@ -595,7 +597,10 @@ class Customer(StripeObject):
 
 class CurrentSubscription(models.Model):
     customer = models.OneToOneField(
-        Customer, related_name="current_subscription", null=True, on_delete=models.SET_NULL
+        Customer,
+        related_name="current_subscription",
+        null=True,
+        on_delete=models.SET_NULL,
     )
     plan = models.CharField(max_length=100)
     quantity = models.IntegerField()

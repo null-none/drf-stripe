@@ -9,58 +9,100 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('payments', '0001_initial'),
+        ("payments", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='charge',
-            name='customer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='charges', to='payments.customer'),
+            model_name="charge",
+            name="customer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="charges",
+                to="payments.customer",
+            ),
         ),
         migrations.AlterField(
-            model_name='charge',
-            name='invoice',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='charges', to='payments.invoice'),
+            model_name="charge",
+            name="invoice",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="charges",
+                to="payments.invoice",
+            ),
         ),
         migrations.AlterField(
-            model_name='currentsubscription',
-            name='customer',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='current_subscription', to='payments.customer'),
+            model_name="currentsubscription",
+            name="customer",
+            field=models.OneToOneField(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="current_subscription",
+                to="payments.customer",
+            ),
         ),
         migrations.AlterField(
-            model_name='customer',
-            name='user',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.DO_NOTHING, to=settings.AUTH_USER_MODEL),
+            model_name="customer",
+            name="user",
+            field=models.OneToOneField(
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='event',
-            name='customer',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='payments.customer'),
+            model_name="event",
+            name="customer",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="payments.customer",
+            ),
         ),
         migrations.AlterField(
-            model_name='eventprocessingexception',
-            name='event',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='payments.event'),
+            model_name="eventprocessingexception",
+            name="event",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="payments.event",
+            ),
         ),
         migrations.AlterField(
-            model_name='invoice',
-            name='customer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='invoices', to='payments.customer'),
+            model_name="invoice",
+            name="customer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="invoices",
+                to="payments.customer",
+            ),
         ),
         migrations.AlterField(
-            model_name='invoiceitem',
-            name='invoice',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='items', to='payments.invoice'),
+            model_name="invoiceitem",
+            name="invoice",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="items",
+                to="payments.invoice",
+            ),
         ),
         migrations.AlterField(
-            model_name='transfer',
-            name='event',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='transfers', to='payments.event'),
+            model_name="transfer",
+            name="event",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="transfers",
+                to="payments.event",
+            ),
         ),
         migrations.AlterField(
-            model_name='transferchargefee',
-            name='transfer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='charge_fee_details', to='payments.transfer'),
+            model_name="transferchargefee",
+            name="transfer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="charge_fee_details",
+                to="payments.transfer",
+            ),
         ),
     ]
