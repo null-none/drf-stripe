@@ -79,7 +79,7 @@ class Event(StripeObject):
     customer = models.ForeignKey("Customer", null=True, on_delete=models.SET_NULL)
     webhook_message = JSONField()
     validated_message = JSONField(null=True)
-    valid = models.NullBooleanField(null=True)
+    valid = models.BooleanField(default=False)
     processed = models.BooleanField(default=False)
 
     @property
@@ -299,7 +299,7 @@ class Customer(StripeObject):
     card_fingerprint = models.CharField(max_length=200, blank=True)
     card_last_4 = models.CharField(max_length=4, blank=True)
     card_kind = models.CharField(max_length=50, blank=True)
-    date_purged = models.DateTimeField(null=True, editable=False)
+    date_exp = models.DateTimeField(null=True, editable=False)
 
     objects = CustomerManager()
 
@@ -325,7 +325,7 @@ class Customer(StripeObject):
         self.card_fingerprint = ""
         self.card_last_4 = ""
         self.card_kind = ""
-        self.date_purged = timezone.now()
+        self.date_exp = timezone.now()
         self.save()
 
     def delete(self, using=None):
@@ -337,7 +337,7 @@ class Customer(StripeObject):
             self.card_fingerprint
             and self.card_last_4
             and self.card_kind
-            and self.date_purged is None
+            and self.date_exp is None
         )
 
     def has_active_subscription(self):
@@ -656,7 +656,7 @@ class Invoice(models.Model):
     customer = models.ForeignKey(
         Customer, related_name="invoices", on_delete=models.DO_NOTHING
     )
-    attempted = models.NullBooleanField()
+    attempted = models.BooleanField()
     attempts = models.PositiveIntegerField(null=True)
     closed = models.BooleanField(default=False)
     paid = models.BooleanField(default=False)
@@ -818,10 +818,10 @@ class Charge(StripeObject):
     amount = models.DecimalField(decimal_places=2, max_digits=9, null=True)
     amount_refunded = models.DecimalField(decimal_places=2, max_digits=9, null=True)
     description = models.TextField(blank=True)
-    paid = models.NullBooleanField(null=True)
-    disputed = models.NullBooleanField(null=True)
-    refunded = models.NullBooleanField(null=True)
-    captured = models.NullBooleanField(null=True)
+    paid = models.BooleanField(default=False)
+    disputed = models.BooleanField(default=False)
+    refunded = models.BooleanField(default=False)
+    captured = models.BooleanField(default=False)
     fee = models.DecimalField(decimal_places=2, max_digits=9, null=True)
     receipt_sent = models.BooleanField(default=False)
     charge_created = models.DateTimeField(null=True, blank=True)
