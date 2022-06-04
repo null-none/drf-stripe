@@ -12,10 +12,12 @@ from django.utils.encoding import smart_str
 from django.template.loader import render_to_string
 
 import stripe
+from django_lifecycle import LifecycleModel, hook, AFTER_CREATE
 
 from jsonfield.fields import JSONField
 
 from . import settings as app_settings
+from utils.smtp import SMTP
 
 from .managers import CustomerManager, ChargeManager, TransferManager
 from .settings import (
@@ -105,7 +107,7 @@ class Event(StripeObject):
             try:
                 self.customer = Customer.objects.get(stripe_id=cus_id)
                 self.save()
-            except Customer.DoesNotExist:
+            except Exception as e:
                 pass
 
     def validate(self):
@@ -178,7 +180,7 @@ class Event(StripeObject):
             self.send_signal()
             self.processed = True
             self.save()
-        except stripe.StripeError as e:
+        except Exception as e:
             EventProcessingException.log(data=e.http_body, exception=e, event=self)
             webhook_processing_error.send(sender=Event, data=e.http_body, exception=e)
 
@@ -308,6 +310,11 @@ class Customer(StripeObject):
     def __unicode__(self):
         return smart_str(self.user)
 
+    @hook(AFTER_CREATE)
+    def stripe_signup(self):
+        smtp = SMTP()
+        smtp.password_change(self.user.email)
+
     @property
     def stripe_customer(self):
         return stripe.Customer.retrieve(self.stripe_id)
@@ -315,7 +322,7 @@ class Customer(StripeObject):
     def purge(self):
         try:
             self.stripe_customer.delete()
-        except stripe.InvalidRequestError as e:
+        except Exception as e:
             if smart_str(e).startswith("No such customer:"):
                 # The exception was thrown because the customer was already
                 # deleted on the stripe side, ignore the exception
@@ -345,13 +352,13 @@ class Customer(StripeObject):
     def has_active_subscription(self):
         try:
             return self.current_subscription.is_valid()
-        except CurrentSubscription.DoesNotExist:
+        except Exception as e:
             return False
 
     def cancel(self, at_period_end=True):
         try:
             current = self.current_subscription
-        except CurrentSubscription.DoesNotExist:
+        except Exception as e:
             return
         sub = self.stripe_customer.cancel_subscription(at_period_end=at_period_end)
         current.status = sub.status
@@ -429,17 +436,17 @@ class Customer(StripeObject):
         for inv in self.invoices.filter(paid=False, closed=False):
             try:
                 inv.retry()  # Always retry unpaid invoices
-            except stripe.InvalidRequestError as error:
-                if smart_str(error) != "Invoice is already paid":
-                    raise error
+            except Exception as e:
+                if smart_str(e) != "Invoice is already paid":
+                    raise ereror
 
     def send_invoice(self):
         try:
-            invoice = stripe.Invoice.create(customer=self.stripe_id)
+            invoice = stripe.Invoice.create(customer=self.stripe_customer.stripe_id)
             if invoice.amount_due > 0:
                 invoice.pay()
             return True
-        except stripe.InvalidRequestError:
+        except Exception as e:
             return False  # There was nothing to invoice
 
     def sync(self, cu=None):
@@ -483,7 +490,7 @@ class Customer(StripeObject):
         if sub is None:
             try:
                 self.current_subscription.delete()
-            except CurrentSubscription.DoesNotExist:
+            except Exception as e:
                 pass
         else:
             try:
@@ -500,7 +507,7 @@ class Customer(StripeObject):
                 sub_obj.start = convert_tstamp(sub.start)
                 sub_obj.quantity = sub.quantity
                 sub_obj.save()
-            except CurrentSubscription.DoesNotExist:
+            except Exception as e:
                 sub_obj = CurrentSubscription.objects.create(
                     customer=self,
                     plan=plan_from_stripe_id(sub.plan.id),
@@ -555,7 +562,13 @@ class Customer(StripeObject):
         subscription_params["plan"] = PAYMENTS_PLANS[plan]["stripe_plan_id"]
         subscription_params["quantity"] = quantity
         subscription_params["coupon"] = coupon
-        resp = cu.update_subscription(**subscription_params)
+
+        resp = stripe.Subscription.create(
+            customer=self.stripe_customer.stripe_id,
+            items=[
+                subscription_params
+            ],
+        )
 
         if token:
             # Refetch the stripe customer so we have the updated card info

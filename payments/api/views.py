@@ -6,6 +6,7 @@ from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from utils.smtp import SMTP
 from .. import settings as app_settings
 
 from .serializers import (
@@ -74,11 +75,10 @@ class SubscriptionView(StripeView):
                 stripe_plan = validated_data.get("stripe_plan", None)
                 customer = self.get_customer()
                 subscription = customer.subscribe(stripe_plan)
-
                 return Response(subscription, status=status.HTTP_201_CREATED)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except stripe.StripeError as e:
+        except Exception as e:
             from django.utils.encoding import smart_str
 
             error_data = {"error": smart_str(e) or "Unknown error"}
@@ -111,7 +111,7 @@ class ChangeCardView(StripeView):
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        except stripe.CardError as e:
+        except Exception as e:
             error_data = {"error": smart_str(e) or "Unknown error"}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -127,10 +127,12 @@ class CancelView(StripeView):
             if serializer.is_valid():
                 customer = self.get_customer()
                 customer.cancel()
+                smtp = SMTP()
+                smtp.subscription_cancel(request.user.email)
                 return Response({"success": True}, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except stripe.StripeError as e:
+        except Exception as e:
             error_data = {"error": smart_str(e) or "Unknown error"}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -238,6 +240,6 @@ class WebhookView(StripeView):
                     return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except stripe.StripeError as e:
+        except Exception as e:
             error_data = {"error": smart_str(e) or "Unknown error"}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
