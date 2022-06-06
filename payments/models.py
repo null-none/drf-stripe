@@ -355,12 +355,12 @@ class Customer(StripeObject):
         except Exception as e:
             return False
 
-    def cancel(self, at_period_end=True):
+    def cancel(self):
         try:
             current = self.current_subscription
         except Exception as e:
             return
-        sub = self.stripe_customer.cancel_subscription(at_period_end=at_period_end)
+        sub = stripe.Subscription.delete(self.stripe_customer["subscription"]["id"])
         current.status = sub.status
         current.cancel_at_period_end = sub.cancel_at_period_end
         current.current_period_end = convert_tstamp(sub, "current_period_end")
@@ -549,7 +549,6 @@ class Customer(StripeObject):
                 quantity = PLAN_QUANTITY_CALLBACK(self)
             else:
                 quantity = 1
-        cu = self.stripe_customer
 
         subscription_params = {}
         if trial_days:
@@ -565,14 +564,12 @@ class Customer(StripeObject):
 
         resp = stripe.Subscription.create(
             customer=self.stripe_customer.stripe_id,
-            items=[
-                subscription_params
-            ],
+            items=[subscription_params],
         )
+        cu = self.stripe_customer
 
         if token:
             # Refetch the stripe customer so we have the updated card info
-            cu = self.stripe_customer
             self.save_card(cu)
 
         self.sync_current_subscription(cu)
