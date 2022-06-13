@@ -355,12 +355,13 @@ class Customer(StripeObject):
         except Exception as e:
             return False
 
-    def cancel(self):
+    def cancel(self, cancel_at_period_end=True):
         try:
             current = self.current_subscription
         except Exception as e:
             return
-        sub = stripe.Subscription.delete(self.stripe_customer["subscription"]["id"])
+        sub = stripe.Subscription.modify(self.stripe_customer["subscription"]["id"],
+                                         cancel_at_period_end=cancel_at_period_end)
         current.status = sub.status
         current.cancel_at_period_end = sub.cancel_at_period_end
         current.current_period_end = convert_tstamp(sub, "current_period_end")
