@@ -7,9 +7,10 @@ import six
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import models
-from django.utils import timezone
 from django.utils.encoding import smart_str
 from django.template.loader import render_to_string
+from stats.models import StatsRegistration
+from django.utils import timezone
 
 import stripe
 from django_lifecycle import LifecycleModel, hook, AFTER_CREATE
@@ -360,8 +361,10 @@ class Customer(StripeObject):
             current = self.current_subscription
         except Exception as e:
             return
-        sub = stripe.Subscription.modify(self.stripe_customer["subscription"]["id"],
-                                         cancel_at_period_end=cancel_at_period_end)
+        sub = stripe.Subscription.modify(
+            self.stripe_customer["subscription"]["id"],
+            cancel_at_period_end=cancel_at_period_end,
+        )
         current.status = sub.status
         current.cancel_at_period_end = sub.cancel_at_period_end
         current.current_period_end = convert_tstamp(sub, "current_period_end")
@@ -556,27 +559,29 @@ class Customer(StripeObject):
             subscription_params[
                 "trial_end"
             ] = datetime.datetime.utcnow() + datetime.timedelta(days=trial_days)
-        if token:
-            subscription_params["card"] = token
 
         subscription_params["plan"] = PAYMENTS_PLANS[plan]["stripe_plan_id"]
         subscription_params["quantity"] = quantity
         subscription_params["coupon"] = coupon
 
-        resp = stripe.Subscription.create(
-            customer=self.stripe_customer.stripe_id,
-            items=[subscription_params],
-        )
-        cu = self.stripe_customer
-
         if token:
             # Refetch the stripe customer so we have the updated card info
-            self.save_card(cu)
+            self.update_card(token)
 
-        self.sync_current_subscription(cu)
+        cu = self.stripe_customer
+        resp = stripe.Subscription.create(
+            customer=cu.stripe_id,
+            items=[subscription_params],
+        )
+        self.sync_current_subscription(self.stripe_customer)
         if charge_immediately:
             self.send_invoice()
         subscription_made.send(sender=self, plan=plan, stripe_response=resp)
+        stats = StatsRegistration.objects.filter(date=timezone.now().date()).first()
+        if not stats:
+            stats = StatsRegistration.objects.create(date=timezone.now().date())
+        stats.count_pay += 1
+        stats.save()
         return resp
 
     def charge(
