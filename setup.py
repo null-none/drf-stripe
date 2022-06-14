@@ -23,7 +23,7 @@ setup(
     author_email=AUTHOR_EMAIL,
     description=DESCRIPTION,
     long_description=read("README.rst"),
-    version="1.2.4",
+    version="1.2.5",
     license="MIT",
     url=URL,
     packages=find_packages(),
