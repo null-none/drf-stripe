@@ -26,10 +26,4 @@ Endpoints
 Plans
 ======================
 
-PAYMENTS_PLANS = {
-    "premium": {"name": "Premium", "stripe_plan_id": "price_1L6TduCWdky3mdpH4wCEdKvf"},
-    "enterprise": {
-        "name": "Enterprise",
-        "stripe_plan_id": "price_1L6TeiCWdky2mdpHqWmD4DDA",
-    },
-}
+* "premium": {"name": "Premium", "stripe_plan_id": "price_1L6TduCWdky3mdpH4wCEdKvf"},
