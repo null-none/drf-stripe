@@ -13,12 +13,10 @@ from stats.models import StatsRegistration
 from django.utils import timezone
 
 import stripe
-from django_lifecycle import LifecycleModel, hook, AFTER_CREATE
 
 from jsonfield.fields import JSONField
 
 from . import settings as app_settings
-from utils.smtp import SMTP
 
 from .managers import CustomerManager, ChargeManager, TransferManager
 from .settings import (
@@ -310,11 +308,6 @@ class Customer(StripeObject):
 
     def __unicode__(self):
         return smart_str(self.user)
-
-    @hook(AFTER_CREATE)
-    def stripe_signup(self):
-        smtp = SMTP()
-        smtp.password_change(self.user.email)
 
     @property
     def stripe_customer(self):
